@@ -1,0 +1,98 @@
+MODULE fs
+--
+-- FOLD SYNTAX TEST
+--
+WHERE
+
+TYPE list = cons INT @ | nil;
+
+mylist = cons 4 (cons 7 (cons 9 (cons 11 nil)));
+
+gethead l = FOLD l::list {
+	cons = (\h t -> h);
+	nil = "nil"
+};
+
+-- PARAMORPHISM
+	
+insert e ys =
+	FOLD ys :: list {
+		cons = (\ x xs ->  
+					{ 	
+						exs = (	IF e < x 
+								THEN (cons e (cons x (xs>>oxs))) 
+								ELSE (cons x (xs>>exs)) 
+								FI
+							  ); 
+						oxs = (cons x (xs>>oxs))
+					} 
+				);
+		nil = { exs = cons e nil; oxs = nil }
+	} >> exs;
+
+-- FUNCTIONALISED	
+	
+c = (\h t -> (SHOW h) ++ " " ++ t);
+n = "";
+	
+gettailservers = 
+	{
+		cons = (\h t g -> g h (t c));
+		nil = (\t -> n)
+	};
+	
+gettail l = FOLD l::list gettailservers (\h t -> t);
+
+getelement l i = FOLD l::list 
+	{
+		cons = (\x xs c -> IF i == c THEN x ELSE (xs (c+1)) FI);
+		nil = (\c -> nil) 
+	} 0;
+
+printl l =
+	FOLD l::list {
+		cons = c;
+		nil = n
+	};
+
+zfirst (x,_) = x;
+zsecond (_,x) = x;
+ztail list = zsecond (list (\x (xs,_) -> ([x] ++ xs, xs)) ([],[]));
+zhead list = list (\x xs -> x) [];
+
+zreverse list = list (\x xs -> xs ++ [x]) [];
+zzip l1 l2 = zfirst (l1 (\x (rs,ls) -> ([(x,(zhead ls))]++rs, (ztail ls))) ([], zreverse l2));
+
+TYPE set = empty | single INT | union @ @;
+
+set1 = union (union (single 1) (single 2)) (single 3);
+set2 = union (union (single 5) (single 6)) (single 7);
+uni s1 s2 = union s1 s2;
+
+member s e = FOLD s::set {
+	empty = FALSE;
+	single = (\x -> x == e);
+	union = (\s1 s2 -> s1 || s2)
+};
+
+
+TYPE zdata = pair @ @ | int INT | bool BOOL | zlist [INT];
+
+zprint dt = FOLD dt::zdata {
+   pair = (\x y -> x ++ " " ++ y);
+   zdefault = (\x -> (SHOW x))
+};
+
+{-
+
+zprint dt = FOLD dt::zdata {
+   pair = (\x y -> x ++ " " ++ y);
+   int = (\x -> (SHOW x))
+   bool = (\x -> (SHOW x))
+   zlist = (\x -> (SHOW x))
+};
+
+-}
+
+
+

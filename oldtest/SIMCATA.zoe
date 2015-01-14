@@ -1,0 +1,27 @@
+MODULE simcata
+
+WHERE
+
+TYPE list = consl ? @ || nil; 
+
+TYPE bintree = node @ @ || leaf ?;
+
+lefttree =  node (node (leaf 2) (node (leaf 2) (leaf 5))) (leaf 3);
+
+middletree = leaf 2;
+
+righttree = leaf 5;
+
+ns =  (\ x y -> x + y);
+
+ls =  (\ x -> x);
+
+consls = (\ x xs -> x + xs);
+
+nils = 0;
+
+mylist = consl 1 (consl 2 nil);
+
+treelist = (consl lefttree (consl middletree nil));
+
+foldtree nse lse = treelist (\ x xs -> (x nse lse) + xs) (righttree nse lse);

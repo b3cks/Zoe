@@ -1,0 +1,37 @@
+MODULE dspr WHERE
+
+-- binary trees and friend
+node left right n v t = n (left n v t) (right n v t);
+leaf val n v t = v val;
+tip n v t = t;
+
+union s1 s2 e = s1 e T (s2 e);
+single x e = eq x e;
+empty e = F;
+
+bsize b = b (\ rl rr -> rl ++ rr) (\ _ -> "x") "";
+bsum b = b (\ rl rr -> rl ++ rr) (\ v -> v) "";
+
+prbsum b
+========
+	prbint
+    b
+    -- the "++" is cute, at this stage of Zoe's development
+	(\ _ _ rl _ rr -> rl ++ rr)
+	(\ _ v -> v)
+	(\ _ -> "")
+    ?
+;
+
+-- where
+prbint b g f e y
+================
+	t2s1 (
+		b
+
+		(\ (rl, l) (rr, r) -> (g y l rl r rr, node l r) )
+
+		(\ v -> (f y v, leaf v) )
+
+		(e y, tip)
+	);

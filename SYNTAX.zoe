@@ -1,0 +1,118 @@
+MODULE syntax
+
+WHERE
+
+g1 x = g2 WHERE g2 = x;;
+
+mytree =  node (node (leaf 2) (node (leaf 2) (leaf 5))) (leaf 3);
+
+mylist = consl 5 (consl 2 (consl 3 nil));
+
+sumlist l =
+	FOLD l::list { nil = 0; consl = (\x xs -> x + xs) };
+
+temp = (insert 5 mylist);
+	
+insert e ys =
+	FOLD ys :: list {
+		consl = (\ x xs ->  { exs = (IF e < x THEN (consl e (consl x (xs>>oxs))) ELSE (consl x (xs>>exs)) FI); oxs = (consl x (xs>>oxs))} );
+		nil = { exs = consl e nil; oxs = nil }
+	};
+	
+insert1 e ys =
+	FOLD ys :: list {
+		consl = (\ x1 (x21,x22) -> ((IF e < x1 THEN (consl e (consl x1 x22)) ELSE (consl x1 x21) FI), (consl x1 x22)));
+		nil = (consl e nil, nil)
+	};
+
+tup = {a=1;b=2};
+
+tup1 = tup << {c=2};
+
+--myfunc (x,y) = x + y;
+
+{-alist = [1,2,3,4,5];-}
+
+-- f @(a,b) = (1,2);
+
+-- alistht@(x:y:z) = [1] ++ [2] ++ [3];
+
+-- tup = ((1,2),(1,1));
+
+((t1,t2),tt@(t3,t4)) = ((1,2),(3,4));
+
+f1 = (\ l@(x1:x2) -> x1);
+
+f2 l@(x1,x2) = x2;
+
+f3 (e1:e2:e3) = e3;
+
+--a mylist::list;
+
+y = (-(5+1));
+
+{-
+sumtree (bt, a) =
+	FOLD bt :: bintree
+	CASE node n1 n2 -> n1 + n2
+	CASE leaf l -> l + a
+	END;
+
+sumlist ls =
+	FOLD ls :: list
+	CASE consl x1 x2 -> x1 + x2
+	CASE nil -> 0
+	END;
+
+replace ls =
+	FOLD ls :: list
+	CASE consl x1 x2@(a,b) -> (consl b a, (b::NUMS)+1)
+	CASE nil -> (nil,0)
+	END;
+	
+insert e ys =
+	FOLD ys :: list
+	CASE consl x1 x2@(x21,x22) -> ((IF e < x1 THEN (consl e (consl x1 x22)) ELSE (consl x1 x21) FI), (consl x1 x22))
+	CASE nil -> (consl e nil, nil)
+	END;
+
+rr@(x3,x4) = replace (mylist::list);
+ir@(x1,x2) = insert 3 mylist;
+
+x = TT;
+
+test x =
+	FOLD x :: BOOLS
+	CASE FF -> TT
+	CASE TT -> FF
+	END;
+
+	
+-- Type check
+
+list1 = [1,2,3];
+sumlist1 = (list1 :: LTYPES(NUMS)) (\ x xs -> x + xs) 0;
+
+-- function type checking is legible
+and = (\ x y -> ((x :: BOOLS) AND (y :: BOOLS)) :: BOOLS);
+add = (\ x y -> ((x :: NUMS) + (y :: NUMS)) :: NUMS);
+concating = (\ x y -> ((x :: LTYPES(NUMS)) ++ (y :: LTYPES(NUMS))) :: LTYPES(NUMS));
+
+adding1 (x, y) = x + y;
+adding2 = (\ x y -> x + y);
+mul x y = x * y;
+pow(x,y) = y (mul x) 1;
+
+-}
+
+{-
+adding :: NUMS -> NUMS -> NUMS
+adding x y = x + y;
+
+paraxs xs op b = second (xs (\ x (xs, xs') -> ([x]++xs,op x xs xs')) ([],b));
+frist (x,_)=x;
+second (_,y)=y;
+insert y ys = paraxs ys (\ x xs xs' -> IF y < x THEN [y]++[x]++xs ELSE [x]++xs' FI) [y];
+-}
+
+IMPORT lib;

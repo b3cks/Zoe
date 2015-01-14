@@ -1,0 +1,14 @@
+MODULE lib
+WHERE
+add x y = x + y;
+
+
+TYPE list = consl ANY @ | nil; 
+
+TYPE bintree = node @ @ | leaf ANY;
+unary = (-2);
+bool = TRUE || FALSE;
+cal = 1 + 2 - 3 + 1 - 6;
+cal1 = (-1) + 2;
+plus2 x = x + 2;
+a = TRUE;

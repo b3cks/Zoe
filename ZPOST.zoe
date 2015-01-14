@@ -1,0 +1,34 @@
+MODULE zpost
+
+--
+-- ZPOST.zoe for Zoe.v.0.2 as of 1 march 2012
+-- Paul Bailes, School of ITEE UQ
+-- 
+
+WHERE
+
+
+universe
+========
+(\x -> TT);
+
+compose
+=======
+(\ f g x -> f (g x));
+
+zid x = x;
+
+znot b = b FF TT;
+
+t2s1 (a,b) = a;
+t2s2 (a,b) = b;
+
+-- s (s ++ s') y n = y s' (\ x y -> if null s' then y else x)
+-- s s' y n = n s' (\ x y -> x y if s < s' then x else if s > s' then y else impossible)
+-- from IFL2 end of 17 Oct 2011
+eq s1 s2 = s1 s2 (\ residue comp -> znot comp) (\residue comp -> FF);
+ne s1 s2 = s1 s2 (\ residue comp -> comp) (\residue comp -> TT);
+ge s1 s2 = s1 s2 (\ residue comp -> FF) (\residue comp -> znot comp);
+le s1 s2 = s1 s2 (\ residue comp -> TT) (\residue comp -> TT);
+gt s1 s2 = s1 s2 (\ residue comp -> FF) (\residue comp -> znot comp);
+lt s1 s2 = s1 s2 (\ residue comp -> comp) (\residue comp -> comp);

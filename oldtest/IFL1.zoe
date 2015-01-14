@@ -1,0 +1,13 @@
+MODULE ifl1 WHERE
+
+zltst
+=====
+["qaz","wsx","edc"] (\ x xs -> xs ++ [x]) [];
+
+utst
+====
+universe "qaz" "works" "not";
+
+tktst t s
+=========
+t s (\ a b -> [b]) (\c d -> []);

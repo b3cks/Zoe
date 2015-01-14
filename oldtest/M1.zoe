@@ -1,0 +1,41 @@
+MODULE m1 WHERE
+
+s1 = "hello world";
+
+s2 = "- today";
+
+s3 = s1 ++ s2 ++ s1;
+
+zand a b = a b F;
+
+zor a b = a T b;
+
+st = "hello" s1 T F;
+
+sf = "qaz" s1 T F;
+
+tt = T;
+
+tzid = zid s1;
+
+tzand = zand T T;
+
+l1 = [];
+l2 = ["qaz"];
+l3 = ["qaz","qwe"];
+l4 = ["qaz", ["qwe","wsx"]];
+
+tu1 = ("qaz");
+
+(tu2,tu3)=("qwe","rty");
+
+tl3 = l3 (\x -> (\y -> x ++ y)) "plm";
+
+t14 = ["1","2","3"] (\x->(\y-> y ++ [x])) [];
+
+tcomp = (znot . znot . znot) T;
+
+(tu2a,tu3a) = zid ("qwe","rty");
+
+-- test tuples in fn defs
+f x (y,z) = (\ (a,b) c -> (\ d (e,f) -> [x,y,z,a,b,c,d,e,f]));

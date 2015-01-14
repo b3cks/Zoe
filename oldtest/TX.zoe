@@ -1,0 +1,8 @@
+MODULE tx
+WHERE
+adsnt xs = xs (\y ys -> [y] ++ isnil ys ["end"] ys) [];
+isnil xs = xs (\y ys -> F) T;
+xs1 = [];
+xs2 = [[],[]];
+xs3 = ["one", "two"];
+conc xs = xs (\y ys -> y++ys) "";

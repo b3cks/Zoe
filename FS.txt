@@ -1,0 +1,12 @@
+MODULE fs
+--
+-- FOLD SYNTAX TEST
+--
+WHERE
+
+TYPE list = cons ANY list | nil;
+
+-- old style
+-- TYPE list = cons ? @ | nil;
+
+TYPE tree = node @ @ | leaf INT;

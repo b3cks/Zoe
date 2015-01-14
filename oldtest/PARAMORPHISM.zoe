@@ -1,0 +1,8 @@
+MODULE paramorphism
+
+WHERE
+
+paraxs xs op b = zsnd (xs (\ x (xs, xs') -> ([x]++xs,op x xs xs')) ([],b));
+zfst (x,_)=x;
+zsnd (_,y)=y;
+insert y ys = paraxs ys (\ x xs xs' -> IF y < x THEN [y]++[x]++xs ELSE [x]++xs' FI) [y];

@@ -1,0 +1,38 @@
+MODULE be
+--
+-- TEST ZOETIC BEHAVIOUR
+--
+WHERE
+
+-- BOOLEAN
+
+zand x y = x y x;
+zor x y = x x y;
+
+-- NATURAL NUMBER
+
+n1 = 7 (\x -> x + 1) 0;
+
+-- PREDICATES
+
+isZero = (\n -> n (\x-> FALSE) TRUE);
+leq m n = isZero (m - n);
+
+-- STRING
+
+s1 = "hello" "hello world" TRUE FALSE;
+s2 = "hello" "world" TRUE FALSE;
+s3 = "world" "hello" TRUE FALSE;
+
+-- LISTS
+
+l1 = [1,2,3,4] (\x xs -> x + xs) 0;
+
+-- TUPLE
+
+zfirst tup = tup (\x y -> x);
+zsecond tup = tup (\x y -> y);
+
+-- NAMED TUPLE
+
+nt1 = {a = 1; b = 2} "a b" (\x y -> x);

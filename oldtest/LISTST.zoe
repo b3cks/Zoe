@@ -1,0 +1,93 @@
+MODULE listst WHERE
+
+-- lib
+cons x xs = [x] ++ xs;
+nil = [];
+
+
+prrev l
+=======
+   		prlist
+   		l
+   		(\ x _ xs' -> xs' ++ [x])
+   		nil
+;
+
+prlist l g yy
+===============
+ 	t2s1 (
+ 		l
+ 
+		(\x (xs', xs) -> (g x xs xs', cons x xs) )
+
+		(yy, nil)
+    );
+
+ins1 e lst
+==========
+    prlist
+
+    lst						-- l
+    
+    (\ x xs xs' ->			-- g
+	    -- IF
+            lt e x -- e < x
+	    -- THEN
+            (cons e (cons x xs))
+	    -- ELSE
+            (cons x xs')
+    )
+
+    (cons e nil)						-- yy
+;
+
+-- self-applicative version to access "itself" - DOESN'T WORK!
+prlist' l g f yy
+===============
+ 	t2s1 (
+ 		l
+ 
+		(\x (xs', xs) -> (g yy l x xs xs', cons x xs) )
+
+		(f yy, nil)
+    );
+
+ins1' e lst
+==========
+    prlist'
+
+    lst						-- l
+    
+    (\ yy xxs x xs xs' ->			-- g
+	    -- IF
+            lt yy x -- yy < x
+	    -- THEN
+            (cons yy xxs)
+	    -- ELSE
+            (cons x xs')
+    )
+
+    (\x -> cons x nil)					-- f
+    
+    e						-- yy
+;
+
+
+ins2 e lst
+==========
+t2s1 (
+    lst
+	(\ x (xs',xs) ->
+		(
+			-- IF
+                lt e x -- e < x
+			-- THEN
+                (cons e (cons x xs))
+			-- ELSE
+                (cons x xs')
+		,
+			cons x xs
+		)
+	)
+	(cons e nil, nil)
+);

@@ -1,0 +1,293 @@
+{-
+ZRTE.hs for Zoe.v.0.2 as of 1 march 2012
+Paul Bailes, School of ITEE UQ
+-}
+
+module ZRTE where
+-------------------------------
+
+-- Alonzo Run-Time Environment
+-------------------------------
+-- kind of flattened G hierarchy
+-- but with builtin folders
+-------------------------------
+type Scd = (Int, Int) -- serial numbers identifying source point, incl. folder type and which generators
+ 
+
+data Alobj =
+	Apply Scd Alobj Alobj
+	|
+	Func Scd (Alobj -> Alobj)
+	|
+	Folder
+		Scd -- serial numbers identifying the folder type
+		Alobj -- pure function
+		Alobj -- shower
+	|
+	Noshow
+	|
+	Fcomp Scd Alobj Alobj
+	|
+	Numprim Scd Integer
+	|
+	Strprim Scd String
+	|
+	Boolprim Scd Bool
+	|
+	Listprim Scd [Alobj]
+	|
+	Concat Scd [Alobj]
+	|
+	Tuple Scd [Alobj]
+	|
+	Ftype Scd  -- serial numbers identifying the folder type
+	|
+	Funcs Scd | Nums Scd | Strs Scd | Bools Scd | Lists Scd | Tuples Scd | Ftypes Scd | Ltypes Scd | Mtypes Scd | Ttypes Scd | Showop Scd
+	|
+	Ltype Scd Alobj
+	|
+	Mtype Scd Alobj Alobj
+	|
+	Ttype Scd [Alobj]
+	|
+	Tcheck Scd Alobj Alobj
+	{- |
+	Charprim Scd Char -}
+	{-	|
+	Method ... -}
+	|
+	Error Scd Alobj
+
+instance Show Alobj where
+	show (Numprim scd n) = show n
+	show (Strprim scd s) = s
+	show (Func scd f) = error ("can't show a function, around: " ++ show scd)
+	show (Boolprim scd True) = "T"
+	show (Boolprim scd False) = "F"
+	show (Listprim scd xs) =  show (map (show . eval) xs)
+	show (Folder scd f Noshow) = error ("no-show for folder, around: " ++ show scd)
+	show (Folder scd f s) = show (eva2 scd f s)
+	show (Tuple scd ts) = error ("can't show a tuple yet, around: " ++ show scd)
+	--STARTTW Seems to be causing a problem--
+  	--show (Tuple scd ts) = show (map (show . eval) ts)
+	--ENDTW--
+
+run :: Alobj -> IO()
+run ao = print (eval ao)
+	
+
+
+
+eval :: Alobj -> Alobj
+
+-- the most important one
+eval (Apply scd f x) = eva2 scd (eval f) (eval x)
+
+eval (Folder scf f s) = Folder scf f (eval s) -- f will already have been eval-ed; s just maybe not
+
+eval (Fcomp scc f1 f2) = Func scc (\x -> Apply scc f1 (Apply scc f2 x))
+
+eval (Concat scc []) = error ("attempt to concatenate nothing around: " ++ show scc)
+eval (Concat scc css@((Strprim _ _):_)) =
+	Strprim scc (concat (map (unstr . eval) css))
+	where
+		unstr (Strprim scs cs) = cs
+		unstr obj = error ("attempt to concatenate string with non-string around: " ++ show scc)
+eval (Concat scc xss@((Listprim _ _):_)) =
+	Listprim scc (concat (map (unlst . eval) xss))
+	where
+		unlst (Listprim scl xs) = xs
+		unlst obj = error ("attempt to concatenate list with non-list around: " ++ show scc)
+
+eval (Tcheck sct x t) = evt2 sct (eval x) (eval t)
+
+eval (Error scd s) = eve2 scd (eval s)
+
+-- the rest!
+-- Func
+-- Noshow
+-- Numprim
+-- Strprim
+-- Boolprim
+-- Listprim
+-- Tuple
+-- Ftype
+-- Ltype
+-- Mtype
+-- TType
+-- Funcs Nums Strs Bools Lists Tuples Ftypes Ttypes Mtypes Ttypes Showop
+-- Charprim
+eval x = x
+
+-- subsidiary: eval (Apply scd f x) = eva2 scd (eval f) (eval x)
+eva2 sca (Func scf f) x = eval (f x)
+
+eva2 sca (Folder scf f s) x = eva2 sca f x
+
+eva2 sca (Numprim scn n) f = Func sca (\ x -> eviter scn n f x)
+
+eva2 sca (Boolprim scd True) x = Func sca (\y -> x)
+eva2 sca (Boolprim scd False) x = Func sca (\y -> y)
+
+eva2 sca (Listprim scd xs) o = Func sca (\b -> evlfold scd xs o b)
+
+-- eva2 sca (Strprim scd s) x = error ("can't apply a string, around: " ++ show scd)
+-- eva2 sca (Strprim scs s) o = Func sca (\b -> evlfold scs (map (Charprim scs) s) o b)
+{-
+old semantics for strings
+-- s (s ++ s') y n = y s s'
+-- s s' y n = n s s'
+"qaz" "qazwsx" --> (\ y n -> y "qaz" "wsx")
+"qaz" "qwerty" --> (\ y n -> n "qaz" "qwerty")
+-}
+
+{-
+new semantics for strings
+
+s (s ++ s') y n = y s' (\ x y -> if null s' then y else x)
+s s' y n = n s' (\ x y -> x y if s < s' then x else if s > s' then y else impossible)
+
+then would be e.g.
+
+tok s = (\ s' -> s s' (\ residue comp -> [residue]) (\residue comp -> []) )
+
+s1=s2 = s1 s2 (\ residue comp -> not comp) (\residue comp -> F) )
+s1!=s2 = s1 s2 (\ residue comp -> comp) (\residue comp -> T) )
+s1>=s2 = s1 s2 (\ residue comp -> F) (\residue comp -> not comp) )
+s1<=s2 = s1 s2 (\ residue comp -> T) (\residue comp -> T) )
+s1>s2 = s1 s2 (\ residue comp -> F) (\residue comp -> not comp) )
+s1<s2 = s1 s2 (\ residue comp -> comp) (\residue comp -> comp) )
+-}
+eva2 sca str1@(Strprim scd1 s1) str2@(Strprim scd2 s2)=
+	let
+		prefix [] ys = True
+		prefix (x:xs) [] = False
+		prefix (x:xs) (y:ys) = if x==y then prefix xs ys else False
+		chop [] ys = ys
+		chop (x:xs) [] = []
+		chop (x:xs) (y:ys) = if x==y then chop xs ys else y:ys
+	in
+		Func sca (\y ->
+			Func sca (\n ->
+				if
+					prefix s1 s2
+				then
+					-- old
+					-- Apply sca (Apply sca y str1) (Strprim sca (chop s1 s2))
+					-- new: y (chop s1 s2) (not (s1 == s2))
+					Apply sca (Apply sca y (Strprim sca (chop s1 s2))) (Boolprim sca (not (s1 == s2)))
+				else
+					-- old
+					-- Apply sca (Apply sca n str1) str2
+					-- new: n s2 (s1 < s2)
+					Apply sca (Apply sca n str2) (Boolprim sca (s1 < s2))
+			)
+		)
+
+eva2 sca str1@(Strprim scd s1) str2 =
+	error ("can only apply a string to a string, around: " ++ show sca)
+
+eva2 sca (Tuple scd t) x = error ("can't apply a tuple (yet), around: " ++ show scd)
+
+eva2 sca (Ftype scf1) (Folder scf2 f s) = Boolprim sca (scf1==scf2)
+eva2 sca (Ftype scf) x = falseprim
+eva2 sca (Funcs scfs) (Func scf f) =  trueprim
+eva2 sca (Funcs scfs) (Nums scns) =  trueprim 
+eva2 sca (Funcs scfs) (Bools scbs) =  trueprim
+eva2 sca (Funcs scfs) (Lists scls) =  trueprim
+eva2 sca (Funcs scfs) (Strs scls) =  trueprim
+eva2 sca (Funcs scfs) (Tuples scls) =  trueprim
+eva2 sca (Funcs scfs) (Ftypes scfts) =  trueprim
+eva2 sca (Funcs scfs) (Mtypes scms) =  trueprim
+eva2 sca (Funcs scfs) (Ttypes scts) =  trueprim
+eva2 sca (Funcs scfs) (Ltypes scls) =  trueprim
+eva2 sca (Funcs scfs) x =  falseprim
+eva2 sca (Nums scns) (Numprim scn n) = trueprim -- Need to add number funtion here... I think WW 6/05
+--	let
+--		zero = \f x -> x
+--		succ n = \f x -> f (n f x) -- Naturals building blocks as defined in numerous PAB papers
+--	in
+--		Func sca (\y ->
+--			foldr (.) (replicate n succ):zero)
+eva2 sca (Nums scns) x =  falseprim
+eva2 sca (Strs scns) (Strprim scs s) = trueprim
+eva2 sca (Strs scns) x =  falseprim
+eva2 sca (Bools scbs) (Boolprim scb b) = trueprim
+eva2 sca (Bools scbs) x =  falseprim
+eva2 sca (Lists scls) (Listprim scl xs) = trueprim
+eva2 sca (Lists scls) x =  falseprim
+eva2 sca (Tuples scls) (Tuple sct xs) = trueprim
+eva2 sca (Tuples scls) x =  falseprim
+eva2 sca (Ftypes scfts) (Ftype scf) = trueprim
+eva2 sca (Ftypes scfts) x =  falseprim
+eva2 sca (Ltypes scls) (Ltype scl t) = trueprim
+eva2 sca (Ltypes scls) x =  falseprim
+eva2 sca (Mtypes scms) (Mtype scm d c) = trueprim
+eva2 sca (Mtypes scms) x =  falseprim
+eva2 sca (Ttypes scts) (Ttype sct ts) = trueprim
+eva2 sca (Ttypes scts) x =  falseprim
+
+eva2 sca (Showop scs) (Folder scf f s) = eva2 sca f s
+eva2 sca (Showop scs) x = error ("can only SHOW a Folder, around: " ++ show sca)
+
+eva2 sca (Ltype scl t) x = error ("can't apply a list type, around: " ++ show sca)
+
+eva2 sca (Mtype scm d c) x = error ("can't apply a mapping type, around: " ++ show sca)
+
+eva2 sca (Ttype sct ts) x = error ("can't apply a tuple type, around: " ++ show sca)
+
+-- eva2 sca (Charprim scc c) x = error ("can't apply a string element, around: " ++ show sca) 
+
+eva2 sca f x = error ("unknown rator around: " ++ show sca)
+
+-- sub. for eva2 (Apply sca (Numprim scn n) f) = Func sca (\ x -> eviter scn n f x)
+eviter scd 0 f x = x
+eviter scd n f x = eval (Apply scd f (eviter scd (n-1) f x))
+
+-- sub. for eva2 (Apply sca (Listprim scd xs) o) = Func (\b -> evlfold scd xs o b)
+evlfold scd [] o b = b
+evlfold scd (x:xs) o b = eval (Apply scd (Apply scd o x) (evlfold scd xs o b))
+
+--STARTTW--
+evac scc css@((Strprim _ _):_) =
+  Strprim scc (concat (map unstr css))
+  where
+    unstr (Strprim scs cs) = cs
+    unstr obj = error ("attempt to concatenate string with non-string around: " ++ show scc)
+evac scc xss@((Listprim _ _):_) =
+  Listprim scc (concat (map unlst xss))
+  where
+    unlst (Listprim scl xs) = xs
+    unlst obj = error ("attempt to concatenate list with non-list around: " ++ show scc)
+--ENDTW--
+	
+-- subsidiary: eval (Tcheck sct x t) = evt2 sct (eval x) (eval t)
+evt2 sct folder@(Folder scf f s) (Ftype scft) =
+	if scf == scft
+	then folder
+	else error ("folder type error around " ++ show sct)
+evt2 sct (Listprim scl xs) ltype@(Ltype sclt t) =
+	Listprim scl (map (\x -> Tcheck sct x t) xs)
+-- evt2 sct (Func scf f) (Mtype scm d c) = (Func sct (\x -> Tcheck sct (f (Tcheck sct x d)) c))
+evt2 sct f (Mtype scm d c) = (Func sct (\x -> eval (Tcheck sct (Apply sct f (Tcheck sct x d)) c)))
+evt2 sct (Tuple scv ts) (Ttype sctt tts) = -- error ("can't check a tuple (yet), around: " ++ show sct)
+    Tuple scv (map matchtt (zip ts tts))
+    where
+    matchtt (tx,tt) =  Tcheck scv tx tt
+evt2 sct x f =
+	case eva2 sct f x of
+		(Boolprim scb True) -> x
+		(Boolprim scb False) -> error ("simple type error around " ++ show sct)
+		xx -> error ("malformed type for check around " ++ show sct)
+-- won't ever get here while the above catches all
+-- evt2 sct x t = error ("value-type mismatch for check around " ++ show sct)
+
+-- subsidiary: eval (Error scd s) = eve2 scd (eval s)
+eve2 scd (Strprim scs s) = error ("zoe error:" ++ s ++ " around " ++ show scd)
+eve2 scd x = error ("zoe error (with failed error message) around " ++ show scd)
+
+
+
+libcd = (0,0)
+trueprim = Boolprim libcd True
+falseprim = Boolprim libcd False

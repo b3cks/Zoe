@@ -1,0 +1,182 @@
+MODULE ds WHERE
+
+znil c n
+========
+n;
+
+zcons x xs c n
+==============
+c x (xs c n);
+
+inslist e l
+===========
+    ll
+    WHERE
+	(_,ll) =
+        l
+        
+		-- (\x xsexs ->
+        (\x (xs, exs) ->
+			lt x e
+	            (zcxxs, zcons x exs)
+	            (zcxxs, zcons e zcxxs)
+            WHERE
+            -- (xs, exs) = xsexs;
+            zcxxs = zcons x xs;
+        )
+
+        (znil, zcons e znil);
+    ;
+    
+-- PR Hutton-style on Zoe builtin lists
+-- y->e
+-- xs->l
+hinslist e l
+============
+    ll
+    WHERE
+    (ll,_) =
+        l
+        
+        -- (\ x exsxs ->
+        (\x (exs,xs) ->
+            (g e x xs exs, [x]++xs)
+            WHERE
+            -- (exs, xs) = exsxs;
+            g e x xs exs = lt x e ([x]++exs) ([e,x]++xs);
+        )
+        
+        ([e], []);
+    ;
+
+tlist
+=====
+	((inslist "paul")
+	.
+	(inslist "cecily")
+	.
+	(inslist "michael")
+	.
+	(inslist "anna")
+	.
+	(inslist "helen")
+	.
+	(inslist "veronica")
+	.
+	(inslist "joseph")
+	.
+	(inslist "dominic"))
+	znil
+	showcons shownil;
+
+showcons x sxs
+==============
+x ++ "\n" ++ sxs;
+
+shownil
+=======
+"";
+
+htlist
+======
+	((hinslist "paul")
+	.
+	(hinslist "cecily")
+	.
+	(hinslist "michael")
+	.
+	(hinslist "anna")
+	.
+	(hinslist "helen")
+	.
+	(hinslist "veronica")
+	.
+	(hinslist "joseph")
+	.
+	(hinslist "dominic"))
+    [];
+
+node l x r n e
+==============
+n (l n e) x (r n e);
+
+empty n e
+=========
+e;
+
+instree e t
+============
+	tt
+	WHERE
+	(_,tt) = 
+		t
+
+--      (\ (l, el) x (r, er) ->
+		(\ lel x rer ->
+			-- if e < x
+			lt e x
+			-- then
+				(nlxr, node el x r)
+			-- else
+				(nlxr, node l x er)
+			WHERE
+            (l,el) = lel;
+            (r,er) = rer;
+			nlxr = node l x r;			
+		)
+
+		(empty, node empty e empty)
+		;
+    ;
+
+ttree
+=====
+	((instree "paul")
+	.
+	(instree "cecily")
+	.
+	(instree "michael")
+	.
+	(instree "anna")
+	.
+	(instree "helen")
+	.
+	(instree "veronica")
+	.
+	(instree "joseph")
+	.
+	(instree "dominic"))
+	empty
+	shownode showempty;
+
+shownode sl x sr
+================
+	" (" ++ sl ++ x ++ sr ++ ") ";
+
+showempty
+=========
+	" (empty) ";
+    
+    
+-- generic Hutton-style primitive recursion on Zoe builtin lists
+prlist l g f y
+==============
+    t2s1 (
+        l
+        (\x (rxs, xs) ->
+            (g y x xs rxs, [x]++xs)
+        )
+        (f y, [])
+    );
+
+-- example: list reverse
+prrev l
+=======
+    prlist
+    l
+    (\ _ x _ rxs -> rxs ++ [x])
+    (\ _ -> [])
+    ?
+;
+
+IMPORT ifl2;

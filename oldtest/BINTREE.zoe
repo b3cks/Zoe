@@ -1,0 +1,18 @@
+MODULE bintree
+
+--
+-- TYPETEST.zoe
+-- For testing type definitions in ZOE 0.3
+-- As at 13/10/2013
+
+WHERE
+
+TYPE bintree = node @ @ || leaf ?; -- || nil;
+
+-- Generates the following
+-- tl and tr are the left and right trees
+-- ns and ls are the user supplied higher order functions
+-- node tl tr ns ls = ns (tl ns ls) (tr ns ls);
+-- leaf l ns ls = ls l;
+
+printtree bintree = bintree (\ x y -> "(" ++ x ++ y ++ ")") (\x -> "(" ++ x ++ ")");

@@ -1,0 +1,11 @@
+MODULE test
+
+WHERE
+
+SIMCATA sumtree bt =
+FOLD bt
+CASE null ? -> 0
+END;
+
+-- TYPE b = a ? || b ?;
+-- IMPORT lib;

@@ -1,0 +1,37 @@
+MODULE ifl2 WHERE
+
+-- tests for "old" string semantics (as displayed at ifl2011)
+-- s (s ++ s') y n = y s s'
+-- s s' y n = n s s'
+
+-- different behaviours for new strings (2011-10-09)
+
+zstst1
+======
+"qaz" "qazws" (\ a b -> [a,b]) (\ c d -> [c,d]);
+
+zstst2
+======
+"qaz" "qwerty" (\ a b -> [a,b]) (\ c d -> [c,d]);
+
+
+
+tok s = (\ ss -> s ss (\ residue comp -> [residue]) (\residue comp -> []) );
+
+-- promoted to ZPOST 2011-10-17 (but after history recorded)
+-- eq s1 s2 = s1 s2 (\ residue comp -> bnot comp) (\residue comp -> F);
+-- ne s1 s2 = s1 s2 (\ residue comp -> comp) (\residue comp -> T);
+-- ge s1 s2 = s1 s2 (\ residue comp -> F) (\residue comp -> bnot comp);
+-- le s1 s2 = s1 s2 (\ residue comp -> T) (\residue comp -> T);
+-- gt s1 s2 = s1 s2 (\ residue comp -> F) (\residue comp -> bnot comp);
+-- lt s1 s2 = s1 s2 (\ residue comp -> comp) (\residue comp -> comp);
+
+-- back to original ifl2
+
+ytst s
+======
+y (\ ss -> [s] ++ ss);
+
+ytst2 s
+=======
+y (\ ss -> [s] ++ [ss]);
